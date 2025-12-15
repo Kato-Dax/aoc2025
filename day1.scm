@@ -1,4 +1,12 @@
-(use-modules (srfi srfi-1) (ice-9 match) (util))
+(define-module (day1)
+  #:use-module (srfi srfi-1)
+  #:use-module (ice-9 control)
+  #:use-module (ice-9 match)
+  #:use-module (ice-9 exceptions)
+  #:use-module (ice-9 textual-ports)
+  #:use-module (util)
+  #:use-module (input)
+  #:export (day))
 
 (define (parse-instruction instr)
   (define rest (string-drop instr 1))
@@ -33,10 +41,7 @@
              v
              (cons (- instr dir) instrs)))])))
 
-(unless (equal? (command-line) '("guile"))
-  (with-input-from-file "./day1.txt"
-    (lambda ()
-      (define instrs (parse (read-lines (current-input-port))))
-      (display (part1 instrs)) (newline)
-      (display (part2 instrs)) (newline))))
+(define (day)
+  (define instrs (parse (with-input 1 read-lines)))
+  (list(part1 instrs) (part2 instrs)))
 

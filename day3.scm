@@ -1,4 +1,10 @@
-(use-modules (ice-9 match) (ice-9 exceptions) (ice-9 control) (util))
+(define-module (day3)
+  #:use-module (ice-9 match)
+  #:use-module (ice-9 exceptions)
+  #:use-module (ice-9 control)
+  #:use-module (util)
+  #:use-module (input)
+  #:export (day))
 
 (define parse-bank
   (->>
@@ -37,8 +43,8 @@
       [(c . cs)
        (+ c (* 10 (go cs)))])))
 
-(define (solve)
-  (-> (read-lines (current-input-port))
+(define (solve port)
+  (-> (read-lines port)
       (map string-trim-both _)
       (filter (negate string-empty) _)
       (map parse-bank _)
@@ -49,7 +55,5 @@
         (curry apply +)))
   (map solve '(2 12)))
 
-(unless (equal? (command-line) '("guile"))
-  (for-each (lambda (x) (display x) (newline))
-            (with-input-from-file "./day3.txt" solve)))
+(define (day) (with-input 3 solve))
 

@@ -1,4 +1,11 @@
-(use-modules (srfi srfi-1) (ice-9 match) (ice-9 textual-ports) (ice-9 curried-definitions) (util))
+(define-module (day2)
+  #:use-module (srfi srfi-1)
+  #:use-module (ice-9 match)
+  #:use-module (ice-9 textual-ports)
+  #:use-module (ice-9 curried-definitions)
+  #:use-module (util)
+  #:use-module (input)
+  #:export (day))
 
 (define (parse-range str)
   (match (string-split str #\-)
@@ -78,10 +85,9 @@
       (append-map solutions-for-repitition _)
       delete-duplicates)))
 
-(unless (equal? (command-line) '("guile"))
-  (with-input-from-file "./day2.txt"
-    (lambda ()
-      (define ranges (parse (get-string-all (current-input-port))))
-      (display (apply + (append-map (find-in-range 2) ranges))) (newline)
-      (display (apply + (append-map (find-in-range (inf)) ranges))) (newline))))
+(define (day)
+  (-> (with-input 2 get-string-all) parse (define ranges _))
+  (list
+    (apply + (append-map (find-in-range 2) ranges))
+    (apply + (append-map (find-in-range (inf)) ranges))))
 

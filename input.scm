@@ -1,0 +1,22 @@
+(define-module (input)
+  #:use-module (ice-9 textual-ports) 
+  #:use-module (ice-9 control)
+  #:use-module (ice-9 exceptions)
+  #:export (with-input))
+
+(define (with-input day body)
+  (define path (string-append "./day" (number->string day) ".txt"))
+  (define (load-input) (call-with-port (open-input-file path) get-string-all))
+  (define url (string-append "https://adventofcode.com/2025/day/" (number->string day) "/input"))
+  (define (download-input)
+    (define session (getenv "AOC_SESSION"))
+    (unless session
+      (error 'missing-session-cookie `(day ,day)))
+    (system (string-append "curl --cookie session=" session " " url " > " path)))
+  (call/ec (λ (return)
+    (with-exception-handler
+      (λ (exception)
+         (download-input)
+         (return (call-with-port (open-input-file path) body)))
+      (λ () (call-with-port (open-input-file path) body))
+      #:unwind-for-type &external-error))))
