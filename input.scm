@@ -16,6 +16,8 @@
   (call/ec (λ (return)
     (with-exception-handler
       (λ (exception)
+         (unless ((exception-predicate &external-error) exception)
+           (raise-exception exception))
          (download-input)
          (return (call-with-port (open-input-file path) body)))
       (λ () (call-with-port (open-input-file path) body))
