@@ -13,6 +13,8 @@
             on
             split
             split-once
+            all
+            transpose
             ->
             ->>
             curry))
@@ -52,10 +54,11 @@
   (binop (f a) (f b)))
 
 (define (split del ls)
+  (define test (if (procedure? del) del (λ (x) (equal? x del))))
   (match ls
     [() '()]
     [ls
-      (let-values ([(a b) (span (lambda (x) (not (equal? x del))) ls)])
+      (let-values ([(a b) (span (lambda (x) (not (test x))) ls)])
         (match b
           [() (match a
                 [() '()]
@@ -68,17 +71,18 @@
     [(a b . rest) (values a b)]
     [else #f]))
 
-(define (syntax->list s)
-  (define l
-    (let loop ([s s])
-      (cond
-       [(pair? s) (cons (car s) (loop (cdr s)))]
-       [else s])))
-  (and (list? l)
-       l))
+(define (all pred xs)
+  (not (any (negate pred) xs)))
 
 (define-syntax ->
   (lambda (stx)
+    (define (syntax->list s)
+      (define l
+        (let loop ([s s])
+          (cond
+           [(pair? s) (cons (car s) (loop (cdr s)))]
+           [else s])))
+      (and (list? l) l))
     (syntax-case stx ()
       ([k val] #'val)
       ([k val (f ...) rest ...]
@@ -111,6 +115,25 @@
   (syntax-rules ()
     ([_ f args ...]
      (lambda (v) (f args ... v)))))
+
+(define (transpose xs)
+  (match xs
+    [() '()]
+    [(x) (map (->> (cons _ '())) x)]
+    [(x . xs)
+     (-> xs
+         transpose
+         (λ (rest)
+            (let go ([x x] [rest rest])
+              (match `(,x ,rest)
+                [(() ()) '()]
+                [((a . x) (r . rest))
+                 (cons (cons a r) (go x rest))]
+                [((a . x) ())
+                 (cons (cons a '()) (go x rest))]
+                [(() (r . rest))
+                 (cons r (go x rest))])))
+         )]))
 
 ;; (begin
 ;;   (define (make-generator body)
