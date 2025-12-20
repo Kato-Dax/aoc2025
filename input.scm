@@ -2,7 +2,10 @@
   #:use-module (ice-9 textual-ports) 
   #:use-module (ice-9 control)
   #:use-module (ice-9 exceptions)
-  #:export (with-input))
+  #:export (with-input with-sample))
+
+(define (with-sample body)
+  (with-input-from-file "./sample.txt" (λ () (body (current-input-port)))))
 
 (define (with-input day body)
   (define path (string-append "./day" (number->string day) ".txt"))
@@ -21,4 +24,4 @@
          (download-input)
          (return (call-with-port (open-input-file path) body)))
       (λ () (call-with-port (open-input-file path) body))
-      #:unwind-for-type &external-error))))
+      #:unwind? #t))))

@@ -46,7 +46,7 @@
 (define (solve port)
   (-> (read-lines port)
       (map string-trim-both _)
-      (filter (negate string-empty) _)
+      (filter (negate string-empty?) _)
       (map parse-bank _)
       (define bank _))
   (define (solve n)

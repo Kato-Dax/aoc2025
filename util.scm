@@ -1,14 +1,18 @@
 (define-module (util)
+  #:use-module (srfi srfi-1)
+  #:use-module (srfi srfi-11)
   #:use-module (ice-9 match)
   #:use-module (ice-9 textual-ports)
   #:export (scan
-            string-empty
+            string-empty?
             sign
             read-lines
             string-take-at-most
             string-drop-at-most
             list-repeat
             on
+            split
+            split-once
             ->
             ->>
             curry))
@@ -19,7 +23,7 @@
     ((x . xs) (let ((v (f x init)))
                 (cons v (scan f v xs))))))
 
-(define (string-empty s)
+(define (string-empty? s)
   (= 0 (string-length s)))
 
 (define (sign n)
@@ -46,6 +50,23 @@
 
 (define (on f binop a b)
   (binop (f a) (f b)))
+
+(define (split del ls)
+  (match ls
+    [() '()]
+    [ls
+      (let-values ([(a b) (span (lambda (x) (not (equal? x del))) ls)])
+        (match b
+          [() (match a
+                [() '()]
+                [a (list a)])]
+          [(_ . rest)
+           (cons a (if (null? rest) '(()) (split del rest)))]))]))
+
+(define (split-once del ls)
+  (match (split del ls)
+    [(a b . rest) (values a b)]
+    [else #f]))
 
 (define (syntax->list s)
   (define l

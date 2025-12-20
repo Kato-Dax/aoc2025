@@ -11,7 +11,7 @@
 (define (parse-grid port)
   (-> (read-lines port)
       (curry map string-trim-both)
-      (curry filter (negate string-empty))
+      (curry filter (negate string-empty?))
       (curry map string->list)
       (define lines _))
   (define height (length lines))

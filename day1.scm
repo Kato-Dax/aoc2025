@@ -18,7 +18,7 @@
 (define parse
   (->>
     (map (->> (string-trim-both _ char-whitespace?)) _)
-    (filter (negate string-empty) _)
+    (filter (negate string-empty?) _)
     (map parse-instruction _)))
 
 (define (apply-instruction instr cursor)

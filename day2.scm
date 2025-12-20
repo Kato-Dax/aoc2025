@@ -41,7 +41,7 @@
     (curry filter-map
            (λ (i)
               (string-take-at-most (string-drop-at-most str (* i sequence-len)) sequence-len)))
-    (curry filter (negate string-empty))))
+    (curry filter (negate string-empty?))))
 
 (define ((find-in-range max-repititions) range)
   (match-let ([(start end) range])
