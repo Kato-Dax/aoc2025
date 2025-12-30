@@ -9,12 +9,14 @@
             read-lines
             string-take-at-most
             string-drop-at-most
+            take-at-most
             list-repeat
             on
             split
             split-once
             all
             transpose
+            pairs
             ->
             ->>
             curry))
@@ -44,6 +46,9 @@
 
 (define (string-drop-at-most s n)
   (string-drop s (min n (string-length s))))
+
+(define (take-at-most l n)
+  (take l (min n (length l))))
 
 (define (list-repeat v n)
   (case n
@@ -135,18 +140,14 @@
                  (cons r (go x rest))])))
          )]))
 
-;; (begin
-;;   (define (make-generator body)
-;;     (define yield-tag (make-prompt-tag 'yield))
-;;     (define (yield value) (abort-to-prompt yield-tag value) #f)
-;;     (define next (lambda () (body yield)))
-;;     (lambda (. args)
-;;       (call-with-prompt yield-tag
-;;         (lambda () (next))
-;;         (lambda (continue value)
-;;           (set! next (lambda () (apply continue args)))
-;;           value))
-;;       ))
-;;   (define generator (make-generator (lambda (yield) (yield 3) (yield (yield 5)))))
-;;   `(,(generator) ,(generator 10) ,(generator) ,(generator))
-;;   )
+(define (pairs xs)
+  (apply append
+  (pair-fold
+    (λ (rest acc)
+      (match rest
+        [() acc]
+        [(x . rest)
+         (cons (map (λ (y) (cons x y)) rest) acc)]))
+    '()
+    xs)))
+
