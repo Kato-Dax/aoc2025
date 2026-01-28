@@ -3,5 +3,8 @@
     nativeBuildInputs = with pkgs.buildPackages; [
       guile
     ];
+    buildInputs = with pkgs; [
+      raylib
+    ];
   }
 

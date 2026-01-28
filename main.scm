@@ -10,6 +10,7 @@
     `(day6 ,(@ (day6) day))
     `(day7 ,(@ (day7) day))
     `(day8 ,(@ (day8) day))
+    `(day9 ,(@ (day9) day))
     ))
 
 (define-exception-type &exception-with-stack
@@ -57,8 +58,12 @@
             (newline port)
             (lp fields (+ i 1)))))))))
 
-
 (-> days
+    (curry filter (match-lambda
+                    [(name solve)
+                     (if (< 1 (length (command-line)))
+                       (member (symbol->string name) (cdr (command-line)))
+                       #t)]))
     (curry map (match-lambda
                  [(name solve)
                   `(,name
@@ -71,14 +76,18 @@
                                   (return (make-exception
                                     ex
                                     (make-exception-with-stack (make-stack #t)))))
-                                solve
+                                (λ ()
+                                   (let ([start (get-internal-real-time)]
+                                         [solution (solve)]
+                                         [end   (get-internal-real-time)])
+                                     `(,(/ (- end start) internal-time-units-per-second) ,solution)))
                                 #:unwind? #f))))))]))
     (curry map (match-lambda
                  [(name thread) 
                   (define solution (join-thread thread))
                   (match solution
                     [(? exception? ex) (display `(,name error))]
-                    [solution (display `(,name ,solution))])
+                    [(time solution) (display `(,name ,(exact->inexact time) ,solution))])
                   (newline)
                   `(,name ,solution)]))
     (curry for-each (match-lambda

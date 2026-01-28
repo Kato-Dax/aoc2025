@@ -19,7 +19,9 @@
             pairs
             ->
             ->>
-            curry))
+            curry
+            debug
+            cached))
 
 (define (scan f init xs)
   (match xs
@@ -150,4 +152,31 @@
          (cons (map (λ (y) (cons x y)) rest) acc)]))
     '()
     xs)))
+
+(define (cached f)
+  (define cache (make-hash-table))
+  (λ (k)
+     (define v (hash-ref cache k cache))
+     (if (eqv? v cache)
+       (let ([v (f k)])
+         (hash-set! cache k v)
+         v)
+       v)))
+
+(define-syntax debug
+  (syntax-rules ()
+    ([_] #f)
+    ([_ val]
+     (let ([v val])
+       (display "(") (display 'v) (display "=") (display v) (display ")") (newline) v))
+    ([_ val vals ... last]
+     (begin
+       (display "(") (display 'val) (display "=") (display val)
+       (begin
+         (newline) (display " ") (display 'vals) (display "=") (display vals)) ...
+       (let ([l last])
+         (newline) (display " ") (display 'l) (display "=") (display l)
+         (display ")")
+         (newline)
+         l)))))
 
