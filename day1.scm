@@ -41,7 +41,9 @@
              v
              (cons (- instr dir) instrs)))])))
 
-(define (day)
-  (define instrs (parse (with-input 1 read-lines)))
-  (list(part1 instrs) (part2 instrs)))
+
+(define-day day 1 'real
+  (λ (port called-directly)
+    (define instrs (parse (read-lines port)))
+    (list(part1 instrs) (part2 instrs))))
 

@@ -85,9 +85,10 @@
       (append-map solutions-for-repitition _)
       delete-duplicates)))
 
-(define (day)
-  (-> (with-input 2 get-string-all) parse (define ranges _))
-  (list
-    (apply + (append-map (find-in-range 2) ranges))
-    (apply + (append-map (find-in-range (inf)) ranges))))
+(define-day day 2 'real
+  (λ (port called-directly)
+    (-> port get-string-all parse (define ranges _))
+    (list
+      (apply + (append-map (find-in-range 2) ranges))
+      (apply + (append-map (find-in-range (inf)) ranges)))))
 

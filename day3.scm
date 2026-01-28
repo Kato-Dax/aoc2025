@@ -55,5 +55,7 @@
         (curry apply +)))
   (map solve '(2 12)))
 
-(define (day) (with-input 3 solve))
+(define-day day 3 'real
+  (λ (port called-directly)
+     (solve port)))
 

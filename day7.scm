@@ -73,12 +73,11 @@
                       (return x y))))
                 (error 'find-start)))))
 
-(define (day)
-  (with-input 7
-    (λ (port)
-       (define input (parse port))
-       (let*-values ([(x y) (find-start input)]
-                     [(part1) (emit (array-copy input) x y #f)]
-                     [(part2) (emit (array-copy input) x y #t)])
-         `(,part1 ,part2)))))
+(define-day day 7 'real
+  (λ (port called-directly)
+     (define input (parse port))
+     (let*-values ([(x y) (find-start input)]
+                   [(part1) (emit (array-copy input) x y #f)]
+                   [(part2) (emit (array-copy input) x y #t)])
+       `(,part1 ,part2))))
 

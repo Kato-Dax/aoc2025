@@ -30,7 +30,7 @@
     [(a . b)
      (define circuit-id-of-a (hash-ref junction-circuits a))
      (define circuit-id-of-b (hash-ref junction-circuits b))
-     (unless (= circuit-id-of-a circuit-id-of-b) 
+     (unless (= circuit-id-of-a circuit-id-of-b)
        (define circuit-of-a (hashq-ref circuits circuit-id-of-a))
        (define circuit-of-b (hashq-ref circuits circuit-id-of-b))
        (for-each
@@ -41,34 +41,33 @@
        (hash-remove! circuits circuit-id-of-b))
      circuits]))
 
-(define (day)
-  (with-input 8
-    (λ (port)
-       (define junctions (parse port))
-       (define connections
-         (-> (pairs junctions)
-             (curry filter (match-lambda [(a . b) (not (equal? a b))]))
-             (sort _ (λ (a b)
-                        (on (match-lambda [(a . b) (coord-distance a b)]) < a b)))))
+(define-day day 8 'real
+  (λ (port called-directly)
+     (define junctions (parse port))
+     (define connections
+       (-> (pairs junctions)
+           (curry filter (match-lambda [(a . b) (not (equal? a b))]))
+           (sort _ (λ (a b)
+                      (on (match-lambda [(a . b) (coord-distance a b)]) < a b)))))
 
-       (-> (take-at-most connections 1000)
-           (fold (let ([generator (find-circuits junctions)])
-                   (λ (connection _) (generator connection))) #f _)
-           (hash-map->list cons _)
-           (sort _ (λ (a b) (on length > a b)))
-           (take-at-most _ 3)
-           (map (->> cdr length) _)
-           (apply * _)
-           (define part1 _))
+     (-> (take-at-most connections 1000)
+         (fold (let ([generator (find-circuits junctions)])
+                 (λ (connection _) (generator connection))) #f _)
+         (hash-map->list cons _)
+         (sort _ (λ (a b) (on length > a b)))
+         (take-at-most _ 3)
+         (map (->> cdr length) _)
+         (apply * _)
+         (define part1 _))
 
-       (define part2
-         (let ([generator (find-circuits junctions)])
-           (let go ([connections connections])
-             (define connection (car connections))
-             (define circuits (generator connection))
-             (if (= 1 (hash-count (const #t) circuits))
-               (* (car (car connection)) (car (cdr connection)))
-               (go (cdr connections))))))
+     (define part2
+       (let ([generator (find-circuits junctions)])
+         (let go ([connections connections])
+           (define connection (car connections))
+           (define circuits (generator connection))
+           (if (= 1 (hash-count (const #t) circuits))
+             (* (car (car connection)) (car (cdr connection)))
+             (go (cdr connections))))))
 
-       `(,part1 ,part2))))
+     `(,part1 ,part2)))
 

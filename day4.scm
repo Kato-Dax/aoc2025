@@ -68,18 +68,18 @@
           (array-set! grid #f x y)
           (set! removed (+ 1 removed)))))))
 
-(define (day)
-  (with-input 4 (λ (input)
-    (define grid (parse-grid input))
+(define-day day 4 'real
+  (λ (input called-directly)
+     (define grid (parse-grid input))
 
-    (define part1 (count-accessible grid))
+     (define part1 (count-accessible grid))
 
-    (define part2
-      (let remove ([removed 0])
-        (define removed-now (remove-rolls grid))
-        (if (= 0 removed-now)
-          removed
-          (remove (+ removed removed-now)))))
+     (define part2
+       (let remove ([removed 0])
+         (define removed-now (remove-rolls grid))
+         (if (= 0 removed-now)
+           removed
+           (remove (+ removed removed-now)))))
 
-    `(,part1 ,part2))))
+     `(,part1 ,part2)))
 

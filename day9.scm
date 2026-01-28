@@ -2,7 +2,6 @@
   #:use-module (input)
   #:use-module (util)
   #:use-module (srfi srfi-1)
-  #:use-module (ice-9 hash-table)
   #:use-module (ice-9 match)
   #:use-module (ice-9 control)
   #:use-module (system foreign)

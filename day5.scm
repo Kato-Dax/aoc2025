@@ -49,13 +49,12 @@
 (define (count-ids ranges)
   (apply + (map (match-lambda [(a b) (- (1+ b) a)]) ranges)))
 
-(define (day)
-  (with-input 5
-    (λ (port)
-      (let-values ([(ranges nums) (parse port)])
-        (define (within-any-range num) (any (curry is-in-range num) ranges))
-        (define part1 (count within-any-range nums))
-        (define sorted (sort ranges (λ (a b) (on car < a b))))
-        (define part2 (count-ids (merge-all sorted)))
-        `(,part1 ,part2)))))
+(define-day day 5 'real
+  (λ (port called-directly)
+     (let-values ([(ranges nums) (parse port)])
+       (define (within-any-range num) (any (curry is-in-range num) ranges))
+       (define part1 (count within-any-range nums))
+       (define sorted (sort ranges (λ (a b) (on car < a b))))
+       (define part2 (count-ids (merge-all sorted)))
+       `(,part1 ,part2))))
 
