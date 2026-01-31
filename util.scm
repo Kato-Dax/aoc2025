@@ -168,14 +168,14 @@
     ([_] #f)
     ([_ val]
      (let ([v val])
-       (display "(") (display 'v) (display "=") (display v) (display ")") (newline) v))
+       (display "(") (display 'val) (display "=") (display v) (display ")") (newline) v))
     ([_ val vals ... last]
      (begin
        (display "(") (display 'val) (display "=") (display val)
        (begin
          (newline) (display " ") (display 'vals) (display "=") (display vals)) ...
        (let ([l last])
-         (newline) (display " ") (display 'l) (display "=") (display l)
+         (newline) (display " ") (display 'last) (display "=") (display l)
          (display ")")
          (newline)
          l)))))

@@ -11,6 +11,7 @@
     `(day7 ,(@ (day7) day))
     `(day8 ,(@ (day8) day))
     `(day9 ,(@ (day9) day))
+    `(day10 ,(@ (day10) day))
     ))
 
 (define-exception-type &exception-with-stack
