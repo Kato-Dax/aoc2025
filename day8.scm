@@ -47,8 +47,9 @@
      (define connections
        (-> (pairs junctions)
            (curry filter (match-lambda [(a . b) (not (equal? a b))]))
-           (sort _ (λ (a b)
-                      (on (match-lambda [(a . b) (coord-distance a b)]) < a b)))))
+           (curry map (match-lambda [(a . b) `(,(coord-distance a b) ,a . ,b)]))
+           (sort _ (λ (a b) (on car < a b)))
+           (curry map cdr)))
 
      (-> (take-at-most connections 1000)
          (fold (let ([generator (find-circuits junctions)])
