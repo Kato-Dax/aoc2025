@@ -9,7 +9,6 @@
 
 (define (with-input day body)
   (define path (string-append "./day" (number->string day) ".txt"))
-  (define (load-input) (call-with-port (open-input-file path) get-string-all))
   (define url (string-append "https://adventofcode.com/2025/day/" (number->string day) "/input"))
   (define (download-input)
     (define session (getenv "AOC_SESSION"))

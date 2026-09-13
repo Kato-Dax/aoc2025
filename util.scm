@@ -3,7 +3,8 @@
   #:use-module (srfi srfi-11)
   #:use-module (ice-9 match)
   #:use-module (ice-9 textual-ports)
-  #:export (scan
+  #:export (find-map
+            scan
             string-empty?
             sign
             read-lines
@@ -21,7 +22,18 @@
             ->>
             curry
             debug
-            cached))
+            cached
+            for))
+
+(define (for xs f) (for-each f xs))
+
+(define (find-map f xs)
+  (let loop ([xs xs])
+    (and
+      (not (null? xs))
+      (or
+        (f (car xs))
+        (loop (cdr xs))))))
 
 (define (scan f init xs)
   (match xs

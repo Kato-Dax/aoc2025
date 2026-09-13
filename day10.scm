@@ -2,17 +2,18 @@
   #:use-module (input)
   #:use-module (util)
   #:use-module (srfi srfi-1)
+  #:use-module (srfi srfi-2)
   #:use-module (srfi srfi-9)
   #:use-module (ice-9 match)
   #:use-module (ice-9 control)
-  #:use-module (queue)
   #:export (day))
 
 (define (parse-schematic str)
   (-> str
       (string-filter (λ (c) (not (member c `(#\( #\))))) _)
       (string-split _ #\,)
-      (curry map string->number)))
+      (curry map string->number)
+      (sort _ <)))
 
 (define-record-type machine
   (make-machine diagram wiring joltage)
@@ -24,9 +25,12 @@
 (define (parse-machine str)
   (define parts (string-split str #\space))
   (define diagram (-> parts car
-                      (curry string-filter (->> (member _ '(#\. #\#))))
-                      string->list (curry map (->> (char=? #\# _))) list->bitvector))
-  (define joltage (last parts))
+                      (curry string-filter (char-set #\. #\#))
+                      string->list (curry map (curry char=? #\#)) list->bitvector))
+  (define joltage (-> (last parts)
+                      (string-trim-both _ (char-set #\{ #\}))
+                      (string-split _ #\,)
+                      (map string->number _)))
   (-> parts
       (drop-right _ 1)
       (drop _ 1)
@@ -36,9 +40,10 @@
 
 (define (parse port)
   (-> (read-lines port)
-      (curry map string-trim-both)
-      (curry filter (negate string-empty?))
-      (curry map parse-machine)))
+      (map string-trim-both _)
+      (filter (->> (string-prefix? ";" _) not) _)
+      (filter (negate string-empty?) _)
+      (map parse-machine _)))
 
 (define (bitvector-toggle-bit! vec idx)
   (if (bitvector-bit-set? vec idx)
@@ -49,43 +54,98 @@
   (for-each (λ (light) (bitvector-toggle-bit! lights light)) wiring)
   lights)
 
-(define (wiring<? a b)
-  (match `(,a . ,b)
-    [(() . ()) #f]
-    [(() . _)  #t]
-    [((_ . _) ()) #t]
-    [((ax . a) (bx . b))
-     (cond
-          [(< ax bx) #t]
-          [(> ax bx) #f]
-          [else (wiring<? a b)])]))
+(define (add-joltages . joltages)
+  (apply map `(,+ . ,joltages)))
 
-(define (solve-machine machine)
-  (define shortest-paths (make-hash-table))
-  (define diagram-size (bitvector-length (machine-diagram machine)))
-  (define queue-init (-> machine
-                         machine-wiring
-                         (curry map (->> (add-wiring (make-bitvector diagram-size) _) (cons 1 _)))
-                         list->queue))
-  (let go ([queue queue-init])
-    (match (queue-pop queue)
-      [#f (error 'solve-machine)]
-      [((steps . pos) . queue)
-       (let* ([shortest-path (hash-ref shortest-paths pos #f)])
-         (cond
-           [(equal? (machine-diagram machine) pos) steps]
-           [shortest-path (go queue)]
-           [else
-             (hash-set! shortest-paths pos steps)
-             (go (fold queue-push queue
-                       (map (λ (w) `(,(1+ steps) . ,(add-wiring (bitvector-copy pos) w))) (machine-wiring machine))))]))])))
+
+(define* (minimum less xs #:optional (default #f))
+  (if (null? xs)
+    default
+    (let loop ([m (car xs)] [xs (cdr xs)])
+      (match xs
+        [() m]
+        [(x . xs)
+         (loop (if (less x m) x m) xs)]))))
+
+(define (steps-length steps) (apply + (map cdr steps)))
+
+(define (recursive-solve paths target-joltage)
+  (define joltage-length (length target-joltage))
+  (define (wiring->joltage wiring)
+    (map (λ (i) (if (member i wiring) 1 0)) (iota joltage-length)))
+
+  (if (= 0 (apply + target-joltage))
+    0
+    (and-let* ([paths-to-even (hash-ref paths (list->bitvector (map odd? target-joltage)))])
+      (minimum
+        <
+        (filter-map
+          (λ (path)
+            (define delta-to-even (if (null? path)
+                                    (make-list joltage-length 0)
+                                    (apply add-joltages (map wiring->joltage path))))
+            (define even-joltages (map - target-joltage delta-to-even))
+            (and-let* ([all-non-negative (all (negate negative?) even-joltages)]
+                       [sub-solution (recursive-solve paths (map (->> (/ _ 2)) even-joltages))])
+              (+ (length path) (* 2 sub-solution))))
+          paths-to-even)))
+    ))
+
+(define (combinations n xs)
+  (if (= 0 n)
+    '(())
+    (pair-fold
+      (λ (xs rest)
+        (append
+          (map (->> (cons (car xs) _)) (combinations (- n 1) (cdr xs)))
+          rest))
+      '()
+      xs)))
+
+(define (compute-paths-to-diagrams diagram-size wirings)
+  (define wirings-length (length wirings))
+  (define paths (make-hash-table))
+  (define (add-path diagram steps)
+    (hash-set! paths diagram (cons steps (or (hash-ref paths diagram) '()))))
+  (do ((path-len 0 (+ 1 path-len))) ((> path-len wirings-length) paths)
+      (for (combinations path-len wirings)
+           (λ (steps)
+             (define diagram (make-bitvector diagram-size))
+             (for steps
+                  (λ (wiring)
+                    (add-wiring diagram wiring)))
+             (add-path diagram steps)))))
 
 (define-day day 10 'real
   (λ (port called-directly)
-     (define machines (parse port))
+    (define machines (parse port))
 
-     (define part1 (-> machines (curry map solve-machine) (apply + _)))
-     (define part2 'todo)
+    (define machines-with-paths
+      (map
+        (λ (machine)
+          (cons machine
+                (compute-paths-to-diagrams
+                  (bitvector-length (machine-diagram machine))
+                  (machine-wiring machine))))
+        machines))
 
-     `(,part1 ,part2)))
+    (define part1
+      (-> machines-with-paths
+          (curry map
+                 (->>
+                   (match-lambda
+                     [(machine . paths)
+                      (hash-ref paths (machine-diagram machine))])
+                   (curry map length)
+                   (curry apply min)))
+          (apply + _)))
+
+    (define part2
+      (-> machines-with-paths
+          (curry map (match-lambda
+                       [(machine . paths)
+                        (recursive-solve paths (machine-joltage machine))]))
+          (apply + _)))
+
+    `(,part1 ,part2)))
 
